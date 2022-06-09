@@ -1,0 +1,39 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+# Variables
+
+  vars:
+    iosxe_api_url: "{{ var_device_host }}"
+    iosxe_api_endpoint: "api/v1/global/cli/"
+    iosxe_api_user: "{{ var_device_username }}"
+    iosxe_api_pass: "{{ var_device_password }}"
+    
+    # Interface - IP address configuration
+    iosxe_set_config: "{{ var_cli_input }}"
+
+    #payload
+    payload_main: '{ "config": {{ iosxe_set_config }} }'
+
+  tasks:
+    - name: Get auth token - import task
+      import_tasks: auth_token.yml
+
+    - name: Send custom configuration
+      uri:
+        url: "{{ iosxe_api_url }}/{{ iosxe_api_endpoint }}"
+        method: PUT
+        body_format: json
+        body: "{{ payload_main }}"
+        force_basic_auth: yes
+        status_code: 200
+        validate_certs: false
+        headers:
+          X-auth-token: resp['token-id']
+      register: log_output
+
+
+
+ 

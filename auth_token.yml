@@ -1,0 +1,18 @@
+---
+  - name: Get authorization token
+    uri:
+      url: "{{ iosxe_api_url }}/token-services"
+      method: POST
+      url_username: "{{ iosxe_api_user }}"
+      url_password: "{{ iosxe_api_pass }}"
+      body_format: json
+      body: " "
+      force_basic_auth: yes
+      status_code: 200
+      validate_certs: false
+    register: keyresponse
+
+  - name: Parse JSON response
+    set_fact:
+      resp: "{{ keyresponse.stdout | from_json }}"
+      

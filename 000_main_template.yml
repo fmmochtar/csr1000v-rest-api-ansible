@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+# Variables
+
+  vars:
+    iosxe_api_url: "{{ var_device_host }}"
+    iosxe_api_endpoint: "api/v1/interfaces/"
+    iosxe_api_user: "{{ var_device_username }}"
+    iosxe_api_pass: "{{ var_device_password }}"
+    
+    # Interface - IP address configuration
+    iosxe_set_interface: "{{ var_set_interface }}"
+    iosxe_set_interface_type: "{{ var_set_interface | default ('ethernet') }}"
+    iosxe_set_ip_addr: "{{ var_set_ip_addr }}"
+    iosxe_set_netmask: "{{ var_set_netmask }}"
+
+    #payload
+    payload_main: '[{"type": "{{ iosxe_set_interface_type }}", "if-name": "{{ iosxe_set_interface }}", "ip-address": "{{ iosxe_set_ip_addr }}", "subnet-mask": "{{ iosxe_set_netmask }}", "description": "Configured via AUTONETAPI-Tower"]}]'
+
+  tasks:
+    - name: Get auth token - import task
+      import_tasks: auth_token.yml
+
+    - name: Set IP address of an interface - iosxe
+      uri:
+        url: "{{ iosxe_api_url }}/{{ iosxe_api_endpoint }}/{{ iosxe_set_interface }}"
+        method: PUT
+        body_format: json
+        body: "{{ payload_main | to_nice_json(indent=2) }}"
+        force_basic_auth: yes
+        status_code: 200
+        validate_certs: false
+        headers:
+          X-auth-token: resp['token-id']
+      register: log_output
+
+
+
+ 
